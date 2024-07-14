@@ -126,7 +126,7 @@ export const userDetail = createSlice({
       })
       .addCase(deleteUser.fulfilled, (state) => {
         state.loading = false;
-        toast.success('User deleted successfully');
+        toast.success('User deleted successfully :)');
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;

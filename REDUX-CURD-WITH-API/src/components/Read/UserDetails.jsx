@@ -27,6 +27,9 @@ const UserDetails = () => {
   const handleDelete = (id) => {
     dispatch(deleteUser(id))
       .unwrap()
+      .then(() => {
+        toast.success('User deleted successfully');
+      })
       .catch((err) => {
         toast.error(`Deletion failed: ${err}`);
       });
