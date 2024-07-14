@@ -1,9 +1,11 @@
 /** @format */
 
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteUser, showUser } from '../../features/userDetailsSlice';
+import { deleteUser, showUser } from '../../features/userDetailsSlice.js';
 import { useEffect, useState } from 'react';
 import PopUp from '../Modal/PopUp';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const UserDetails = () => {
   const dispatch = useDispatch();
@@ -11,16 +13,31 @@ const UserDetails = () => {
   const [showPop, setShowPopup] = useState(false);
   const [id, setId] = useState('');
 
-  const { users, loading } = useSelector((state) => state.userDetail);
-  // console.log(users, loading);
+  const { users, loading, error } = useSelector((state) => state.userDetail);
 
   useEffect(() => {
     console.log('UserDetails useEffect');
-    dispatch(showUser());
+    dispatch(showUser())
+      .unwrap()
+      .catch((err) => {
+        toast.error(`Fetch failed: ${err}`);
+      });
   }, [dispatch]);
+
+  const handleDelete = (id) => {
+    dispatch(deleteUser(id))
+      .unwrap()
+      .catch((err) => {
+        toast.error(`Deletion failed: ${err}`);
+      });
+  };
 
   if (loading) {
     return <h2>Loading.....</h2>;
+  }
+
+  if (error) {
+    return <h2>Error: {error}</h2>;
   }
 
   return (
@@ -46,22 +63,21 @@ const UserDetails = () => {
                 </button>{' '}
                 <button
                   className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline'
-                  onClick={() => [setId(ele.id), setShowPopup(true) ,console.log("edit clicked")]}>
+                  onClick={() => [setId(ele.id), setShowPopup(true)]}>
                   View
                 </button>
-                <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline'
-                onClick={()=>dispatch(deleteUser(ele.id))}
-                >
+                <button
+                  className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline'
+                  onClick={() => handleDelete(ele.id)}>
                   Delete
                 </button>
               </div>
             </div>
           ))}
       </div>
+      <ToastContainer />
     </div>
   );
 };
-
-
 
 export default UserDetails;

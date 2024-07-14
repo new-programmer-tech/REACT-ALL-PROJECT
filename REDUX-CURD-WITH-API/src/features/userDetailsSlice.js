@@ -1,12 +1,12 @@
 /** @format */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { toast } from 'react-toastify'; // For user notifications
 
 // Create action
 export const createUser = createAsyncThunk(
-  'createUser',
+  'userDetail/createUser',
   async (data, { rejectWithValue }) => {
-    console.log('createUser called');
     try {
       const response = await fetch(
         'https://668d679a099db4c579f2db14.mockapi.io/crud',
@@ -19,54 +19,62 @@ export const createUser = createAsyncThunk(
         }
       );
 
+      if (!response.ok) {
+        throw new Error('Failed to create user');
+      }
+
       const result = await response.json();
       return result;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error.message);
     }
   }
 );
 
-//read action
-
+// Read action
 export const showUser = createAsyncThunk(
-  'showUser',
+  'userDetail/showUser',
   async (_, { rejectWithValue }) => {
-    console.log('showUser called');
     try {
       const response = await fetch(
         'https://668d679a099db4c579f2db14.mockapi.io/crud'
       );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
       const result = await response.json();
       return result;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error.message);
     }
   }
 );
 
-//delete action
+// Delete action with optimistic update
 export const deleteUser = createAsyncThunk(
-  'deleteUser',
+  'userDetail/deleteUser',
   async (id, { rejectWithValue }) => {
-    console.log("delete id ",id);
-
     try {
       const response = await fetch(
         `https://668d679a099db4c579f2db14.mockapi.io/crud/${id}`,
         {
-          method:'DELETE'
+          method: 'DELETE',
         }
       );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
       const result = await response.json();
-      return result;
+      return { id: result.id };
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(error.message);
     }
   }
 );
-
-// =============================================================================
 
 const initialState = {
   users: [],
@@ -82,46 +90,48 @@ export const userDetail = createSlice({
     builder
       .addCase(createUser.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(createUser.fulfilled, (state, action) => {
         state.loading = false;
         state.users.push(action.payload);
+        toast.success('User created successfully');
       })
       .addCase(createUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+        toast.error(action.payload);
+      })
 
-    builder
       .addCase(showUser.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(showUser.fulfilled, (state, action) => {
         state.loading = false;
         state.users = action.payload;
+        toast.success('Users fetched successfully');
       })
       .addCase(showUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
-
-    builder
-      .addCase(deleteUser.pending, (state) => {
-        state.loading = true;
+        toast.error(action.payload);
       })
-      .addCase(deleteUser.fulfilled, (state, action) => {
+
+      .addCase(deleteUser.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        // Optimistic update
+        state.users = state.users.filter((user) => user.id !== action.meta.arg);
+      })
+      .addCase(deleteUser.fulfilled, (state) => {
         state.loading = false;
-        console.log(action.payload);
-
-        const {id} = action.payload;
-
-        if (id) {
-          state.users = state.users.filter((ele) => ele.id !== id);
-        }
+        toast.success('User deleted successfully');
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        toast.error(`Reverting deletion due to an error: ${action.payload}`);
       });
   },
 });
