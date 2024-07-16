@@ -69,12 +69,45 @@ export const deleteUser = createAsyncThunk(
       }
 
       const result = await response.json();
+      toast.success('User deleted successfully');
       return { id: result.id };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
+
+//update actions
+export const updateUser = createAsyncThunk(
+  'userDetail/updateUser',
+  async (data, { rejectWithValue }) => {
+    console.log('updateUser', data);
+    try {
+      const response = await fetch(
+        `https://668d679a099db4c579f2db14.mockapi.io/crud/${data.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      const result = await response.json();
+      // toast.success('User deleted successfully');
+      return { id: result.id };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+//search action
 
 const initialState = {
   users: [],
@@ -118,20 +151,44 @@ export const userDetail = createSlice({
         toast.error(action.payload);
       })
 
-      .addCase(deleteUser.pending, (state, action) => {
+      .addCase(deleteUser.pending, (state) => {
         state.loading = true;
         state.error = null;
-        // Optimistic update
-        state.users = state.users.filter((user) => user.id !== action.meta.arg);
       })
-      .addCase(deleteUser.fulfilled, (state) => {
+      .addCase(deleteUser.fulfilled, (state, action) => {
         state.loading = false;
+        state.users = state.users.filter((user) => user.id !== action.meta.arg);
+        console.log('deleted user slice');
         toast.success('User deleted successfully :)');
+        // setTimeout(() => {
+        //   toast.success('User deleted successfully ');
+        // }, 100);
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         toast.error(`Reverting deletion due to an error: ${action.payload}`);
+      })
+
+      //update
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users.push(
+          state.users.map((ele) =>
+            ele.id === action.payload.id ? action.payload : ele
+          )
+        );
+
+        toast.success('User Updated successfully');
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload);
       });
   },
 });

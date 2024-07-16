@@ -3,6 +3,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteUser, showUser } from '../../features/userDetailsSlice.js';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import PopUp from '../Modal/PopUp';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,6 +29,7 @@ const UserDetails = () => {
     dispatch(deleteUser(id))
       .unwrap()
       .then(() => {
+        console.log('deleted user component');
         toast.success('User deleted successfully');
       })
       .catch((err) => {
@@ -61,9 +63,11 @@ const UserDetails = () => {
               <p className='text-gray-700 text-base'>{ele.email}</p>
               <p className='text-gray-700 text-base'>{ele.gender}</p>
               <div className='flex justify-end mt-4'>
-                <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline'>
+                <Link
+                  className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline'
+                  to={`/edit/${ele.id}`}>
                   Edit
-                </button>{' '}
+                </Link>
                 <button
                   className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 focus:outline-none focus:shadow-outline'
                   onClick={() => [setId(ele.id), setShowPopup(true)]}>
